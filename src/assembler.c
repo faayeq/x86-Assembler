@@ -247,67 +247,67 @@ void second_pass(const char *f_name, assembler_state *state) {
 			} else if (strcmp(token, "DB") == 0 || strcmp(token, "DW") == 0 || strcmp(token, "DD") == 0) {
 				break;
 			} else {
-				int found = 0;
-				for (int i = 0; i < instruction_set_size; i++) {
-					if (strcmp(instruction_set[i].mnemonic, token) == 0) {
-						// encoding: write opcode to code segment
-						state->code_seg[code_ptr++] = instruction_set[i].opcode;
-						for (int op = 0; op < instruction_set[i].operand_count; op++) {
-							char *operand = strtok(NULL, "\t,\n()[]; ");
-							if (operand == NULL)
-								break;
-							if (strcmp(instruction_set[i].operand_types[op], "reg") == 0) {
-								// encoding: write register code
-								unsigned char reg_code		= encode_reg(operand);
-								state->code_seg[code_ptr++] = reg_code;
-							} else if (strcmp(instruction_set[i].operand_types[op], "imm") == 0) {
-								// encoding: write immediate value
-								int imm						= atoi(operand);
-								state->code_seg[code_ptr++] = (unsigned char)imm;
-							} else if (strcmp(instruction_set[i].operand_types[op], "label") == 0) {
-								// resolving: find label address and write it
-								int addr = -1;
-								for (int j = 0; j < MAP_SIZE; j++) {
-									sym_pair *cur = state->table->sym_table[j];
-									while (cur != NULL) {
-										if (strcmp(cur->label, operand) == 0) {
-											addr = cur->address;
-											break;
-										}
-										cur = cur->next;
-									}
-									if (addr != -1)
-										break;
-								}
-								if (addr == -1) {
-									printf("Undefined label: %s\n", operand);
-									state->code_seg[code_ptr++] = 0xFF;
-								} else {
-									state->code_seg[code_ptr++] = (unsigned char)addr;
-								}
-							}
-						}
-						found = 1;
-						break;
-					}
-				}
-				token = strtok(NULL, "\t,\n()[]; ");
+				// int found = 0;
+				// for (int i = 0; i < instruction_set_size; i++) {
+				//	if (strcmp(instruction_set[i].mnemonic, token) == 0) {
+				//		// encoding: write opcode to code segment
+				//		state->code_seg[code_ptr++] = instruction_set[i].opcode;
+				//		for (int op = 0; op < instruction_set[i].operand_count; op++) {
+				//			char *operand = strtok(NULL, "\t,\n()[]; ");
+				//			if (operand == NULL)
+				//				break;
+				//			if (strcmp(instruction_set[i].operand_types[op], "reg") == 0) {
+				//				// encoding: write register code
+				//				unsigned char reg_code		= encode_reg(operand);
+				//				state->code_seg[code_ptr++] = reg_code;
+				//			} else if (strcmp(instruction_set[i].operand_types[op], "imm") == 0) {
+				//				// encoding: write immediate value
+				//				int imm						= atoi(operand);
+				//				state->code_seg[code_ptr++] = (unsigned char)imm;
+				//			} else if (strcmp(instruction_set[i].operand_types[op], "label") == 0) {
+				//				// resolving: find label address and write it
+				//				int addr = -1;
+				//				for (int j = 0; j < MAP_SIZE; j++) {
+				//					sym_pair *cur = state->table->sym_table[j];
+				//					while (cur != NULL) {
+				//						if (strcmp(cur->label, operand) == 0) {
+				//							addr = cur->address;
+				//							break;
+				//						}
+				//						cur = cur->next;
+				//					}
+				//					if (addr != -1)
+				//						break;
+				//				}
+				//				if (addr == -1) {
+				//					printf("Undefined label: %s\n", operand);
+				//					state->code_seg[code_ptr++] = 0xFF;
+				//				} else {
+				//					state->code_seg[code_ptr++] = (unsigned char)addr;
+				//				}
+				//			}
+				//		}
+				//		found = 1;
+				//		break;
+				//	}
 			}
+			token = strtok(NULL, "\t,\n()[]; ");
 		}
-		free(line_copy);
 	}
-	fclose(file);
+	free(line_copy);
+}
+fclose(file);
 
-	// write code segment to output file
-	FILE *out = fopen("bin/output.bin", "wb");
-	if (out == NULL) {
-		perror("Can't open output file");
-		return;
-	}
-	fwrite(state->code_seg, 1, code_ptr, out);
-	fclose(out);
+// write code segment to output file
+FILE *out = fopen("bin/output.bin", "wb");
+if (out == NULL) {
+	perror("Can't open output file");
+	return;
+}
+fwrite(state->code_seg, 1, code_ptr, out);
+fclose(out);
 
-	printf("Machine code written to output.bin (%u bytes)\n", code_ptr);
+printf("Machine code written to output.bin (%u bytes)\n", code_ptr);
 }
 
 int main(int argc, char *argv[]) {
